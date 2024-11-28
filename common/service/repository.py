@@ -1,12 +1,12 @@
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from common.database.database import BookOrm, new_session
-from common.schemas.book_schemas import SBookAdd
+from common.schemas.book_schemas import SBook
 
 
 class BookRepository:
     @classmethod
-    async def db_add_one(cls, data: SBookAdd) -> int:
+    async def db_add_one(cls, data: SBook) -> int:
         async with new_session() as session:
             book_dict = data.model_dump()
             # Можно указывать явно -> BookOrm(name=book_dict["name"], и т.д.)
@@ -31,7 +31,7 @@ class BookRepository:
             return book
 
     @classmethod
-    async def db_update(cls, data: SBookAdd, id_book: int) -> bool:
+    async def db_update(cls, data: SBook, id_book: int) -> bool:
         async with new_session() as session:
             stmt = update(BookOrm).where(BookOrm.id == id_book).values(**data.model_dump(exclude_unset=True))
             await session.execute(stmt)

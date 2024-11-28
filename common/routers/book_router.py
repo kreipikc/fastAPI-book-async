@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from common.schemas.book_schemas import SBookAdd
+from common.schemas.book_schemas import SBook
 from common.service.repository import BookRepository
 
 router = APIRouter(prefix="/book", tags=["book"])
@@ -10,7 +10,7 @@ async def get_all():
     return {"books": books}
 
 @router.post("")
-async def add_book(book: SBookAdd):
+async def add_book(book: SBook):
     book_id = await BookRepository.db_add_one(book)
     return {"book_id": book_id}
 
@@ -20,7 +20,7 @@ async def get_one(id_book: int):
     return {"book": book}
 
 @router.put("/{id_book}")
-async def update_book(book: SBookAdd, id_book: int):
+async def update_book(book: SBook, id_book: int):
     result = await BookRepository.db_update(book, id_book)
     return {"Success": result}
 

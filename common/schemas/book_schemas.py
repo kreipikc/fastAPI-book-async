@@ -1,11 +1,7 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-class SBookAdd(BaseModel):
+# Схема для валидации данных с помощью pydantic
+class SBook(BaseModel):
     name: str
     description: Optional[str] = None
-
-class SBook(SBookAdd):
-    id: int
-
-    model_config = ConfigDict(from_attributes=True)
