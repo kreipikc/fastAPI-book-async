@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from common.database.database import create_tables, delete_tables
-from common.routers.book_router import router as book_router
+from app.common.database.database import create_tables, delete_tables
+from app.common.routers.book_router import router as book_router
 from contextlib import asynccontextmanager
 
 @asynccontextmanager

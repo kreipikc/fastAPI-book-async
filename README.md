@@ -12,6 +12,8 @@ This is an API with 5 endpoints.
 This is a project created to study FastAPI.
 
 ## How usage?
+For start project `uvicorn app.main:app --reload`
+
 You can send requests:
 - **GET** `/book/` - all info;
 - **POST** `/book/` - add new book;

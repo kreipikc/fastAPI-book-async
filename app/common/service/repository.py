@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
-from common.database.database import BookOrm, new_session
-from common.schemas.book_schemas import SBook
+from app.common.database.database import BookOrm, new_session
+from app.common.schemas.book_schemas import SBook
 
 
 class BookRepository:

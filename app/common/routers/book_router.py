@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from common.schemas.book_schemas import SBook
-from common.service.repository import BookRepository
+from app.common.schemas.book_schemas import SBook
+from app.common.service.repository import BookRepository
 
 router = APIRouter(prefix="/book", tags=["book"])
 
