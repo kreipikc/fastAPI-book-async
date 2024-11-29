@@ -4,9 +4,13 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-load_dotenv(dotenv_path="common/database/.env")
+load_dotenv()
 
-engine = create_async_engine(os.getenv("URL_DATABASE"))
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL is None:
+    raise ValueError("DATABASE_URL environment variable not set")
+
+engine = create_async_engine(DATABASE_URL)
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
 class Model(DeclarativeBase):
