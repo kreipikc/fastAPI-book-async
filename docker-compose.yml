@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  db:
+    build: ./db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=python_api
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432", "-U", "postgres" ]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+
+  app:
+    build: ./app
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:root@db:5432/python_api
+    command: >
+      sh -c "while ! nc -z db 5432; do
+      echo 'Waiting for database...'; sleep 1; done;
+      uvicorn app.main:app --host 0.0.0.0 --port 80"
+volumes:
+  postgres_data:

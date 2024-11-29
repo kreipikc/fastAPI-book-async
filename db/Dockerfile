@@ -1,0 +1,7 @@
+FROM postgres:14
+
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=root
+ENV POSTGRES_DB=python_api
+
+EXPOSE 5432
