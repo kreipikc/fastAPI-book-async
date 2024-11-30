@@ -16,11 +16,11 @@ This is a project created to study FastAPI.
 For start project `uvicorn app.main:app --reload`
 
 You can send requests:
-- **GET** `/book/` - all info;
-- **POST** `/book/` - add new book;
-- **GET** `/book/id_book` - info about a specific book;
-- **PUT** `/book/id_book` - update info about a specific book;
-- **DELETE** `/book/id_book` - delete info about a specific book.
+- **GET** `/books/` - all info;
+- **POST** `/books/` - add new book;
+- **GET** `/books/id_book` - info about a specific book;
+- **PUT** `/books/id_book` - update info about a specific book;
+- **DELETE** `/books/id_book` - delete info about a specific book.
 
 You can also use `/docs` to check the sending of requests, where all the endpoints will be
 
