@@ -7,6 +7,7 @@ This is an API with 5 endpoints.
   - SQLAlchemy
   - Pydantic
 - PostgreSQL
+- Redis
 - Docker
 
 ## Why did I even start creating this project?
