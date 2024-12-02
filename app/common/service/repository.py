@@ -2,6 +2,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from app.common.database.database import BookOrm, new_session
 from app.common.schemas.book_schemas import SBook
+from app.common.database.redis import set_data_redis, get_data_redis
 
 
 class BookRepository:
@@ -26,8 +27,13 @@ class BookRepository:
 
     @classmethod
     async def db_get_one(cls, id_book: int):
+        result = await get_data_redis(id_book)
+        if result:
+            return result
+
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
+            await set_data_redis(book)
             return book
 
     @classmethod
