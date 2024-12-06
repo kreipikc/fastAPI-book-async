@@ -32,6 +32,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:root@db:5432/python_api
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SECRET_KEY_JWT=example_of_a_secret_key
+      - ALGORITHM=HS256
     command: >
       sh -c "while ! nc -z db 5432; do
       echo 'Waiting for database...'; sleep 1; done;

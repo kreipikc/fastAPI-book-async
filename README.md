@@ -1,11 +1,12 @@
 ## What kind of project is this?
-This is an API with 5 endpoints.
+This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT (access token only)
 
 ## What technologies have I used?
 - Python
   - FastAPI
   - SQLAlchemy
   - Pydantic
+- JWT (access token)
 - PostgreSQL
 - Redis
 - Docker
@@ -16,12 +17,23 @@ This is a project created to study FastAPI.
 ## How usage?
 For start project `uvicorn app.main:app --reload`
 
-You can send requests:
+You can send requests for book:
 - **GET** `/books/` - all info;
 - **POST** `/books/` - add new book;
 - **GET** `/books/id_book` - info about a specific book;
 - **PUT** `/books/id_book` - update info about a specific book;
 - **DELETE** `/books/id_book` - delete info about a specific book.
+
+Requests for auth:
+- **POST** `/auth/register` - user registrator;
+- **POST** `/auth/login` - login for user;
+- **POST** `/auth/logout` - logout account;
+- **GET** `/auth/me` - information about you.
+
+Requests for admin:
+- **GET** `/admin/all_users` - information about all users;
+- **PUT** `/admin/update_user_role` - update role for user;
+- **DELETE** `/admin/delete_user` - delete user.
 
 You can also use `/docs` to check the sending of requests, where all the endpoints will be
 

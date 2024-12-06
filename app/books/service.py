@@ -1,8 +1,26 @@
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
-from app.common.database.database import BookOrm, new_session
-from app.common.schemas.book_schemas import SBook
-from app.common.database.redis import set_data_redis, get_data_redis
+from app.books.base import BookOrm
+from app.database import new_session
+from app.books.schemas import SBook
+from app.redis import redis_client
+import json
+
+
+async def set_data_redis_books(book: BookOrm):
+    book_dict = {
+        "id": book.id,
+        "name": book.name,
+        "description": book.description,
+    }
+    json_book = json.dumps(book_dict)
+    await redis_client.set(book.id, json_book, 30)
+
+async def get_data_redis_books(id_book: int):
+    book = await redis_client.get(id_book)
+    if book:
+        return json.loads(book)
+    return None
 
 
 class BookRepository:
@@ -27,13 +45,13 @@ class BookRepository:
 
     @classmethod
     async def db_get_one(cls, id_book: int):
-        result = await get_data_redis(id_book)
+        result = await get_data_redis_books(id_book)
         if result:
             return result
 
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
-            await set_data_redis(book)
+            await set_data_redis_books(book)
             return book
 
     @classmethod
