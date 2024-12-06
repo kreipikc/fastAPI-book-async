@@ -12,7 +12,7 @@ This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and
 - Docker
 
 ## Why did I even start creating this project?
-This is a project created to study FastAPI.
+This is a project created to study FastAPI. Also, with the help of this project, I studied (and am still studying): Docker, JWT token, AAA server.
 
 ## How usage?
 For start project `uvicorn app.main:app --reload`
