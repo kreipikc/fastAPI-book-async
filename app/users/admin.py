@@ -14,15 +14,11 @@ async def get_all_users(user_data: SUser = Depends(get_current_admin_user)):
 
 @router.put("/update_user_role", summary="Update role for user")
 async def update_user_role(id_user: int, role: str , user_data: SUser = Depends(get_current_admin_user)):
-    error = await UserRepository.change_role(id_user, role)
-    if error is None:
-        return {"Success": True}
-    return error
+    await UserRepository.change_role(id_user, role)
+    return {"message": "Роль у пользователя успешно изменена"}
 
 
 @router.delete("/delete_user", summary="Delete user")
 async def delete_user(id_user: int, user_data: SUser = Depends(get_current_admin_user)):
-    error = await UserRepository.delete_user_by_id(id_user)
-    if error is None:
-        return {"Success": True}
-    return error
+    await UserRepository.delete_user_by_id(id_user)
+    return {"message": "Пользователь успешно удален"}

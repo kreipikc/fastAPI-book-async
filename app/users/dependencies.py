@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import Request, HTTPException, Depends
-from jose import JWTError, jwt
-from app.users.auth import SECRET_KEY_JWT, ALGORITHM
+from jose import JWTError, jwt, ExpiredSignatureError
+from app.users.auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
 from app.users.schemas import SUser
 from app.users.service import UserRepository
 
@@ -9,31 +9,55 @@ from app.users.service import UserRepository
 def get_token(request: Request):
     token = request.cookies.get('users_access_token')
     if not token:
-        raise HTTPException(status_code=401, detail='Token not found')
+        raise HTTPException(status_code=401, detail='Access token not found')
+    return token
+
+
+def get_refresh_token(request: Request):
+    token = request.cookies.get('users_refresh_token')
+    if not token:
+        raise HTTPException(status_code=401, detail='Refresh token not found')
     return token
 
 
 async def get_current_user(token: str = Depends(get_token)):
     try:
         payload = jwt.decode(token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Access token expired')
     except JWTError:
-        raise HTTPException(status_code=401, detail='Токен не валидный!')
-
-    expire = payload.get('exp')
-    expire_time = datetime.fromtimestamp(int(expire), tz=timezone.utc)
-
-    if (not expire) or (expire_time < datetime.now(timezone.utc)):
-        raise HTTPException(status_code=401, detail='Токен истек')
+        raise HTTPException(status_code=401, detail='Invalid access token!')
 
     user_id = payload.get('sub')
     if not user_id:
-        raise HTTPException(status_code=401, detail='Не найден ID пользователя')
+        raise HTTPException(status_code=401, detail='User ID not found')
 
     user = await UserRepository.find_one_or_none_by_id(int(user_id))
     if not user:
         raise HTTPException(status_code=401, detail='User not found')
 
     return user
+
+
+async def refresh_access_token(refresh_token: str = Depends(get_refresh_token)):
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Access token expired')
+    except JWTError:
+        raise HTTPException(status_code=401, detail='Invalid refresh token')
+
+    user_id = payload.get('sub')
+    if not user_id:
+        raise HTTPException(status_code=401, detail='User ID not found')
+
+    user = await UserRepository.find_one_or_none_by_id(int(user_id))
+    if not user:
+        raise HTTPException(status_code=401, detail='User not found')
+
+    new_access_token = create_access_token({"sub": str(user.id)})
+    return {"access_token": new_access_token}
+
 
 
 # Проверка на роль студента

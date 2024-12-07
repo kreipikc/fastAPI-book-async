@@ -1,12 +1,12 @@
 ## What kind of project is this?
-This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT (access token only)
+This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT.
 
 ## What technologies have I used?
 - Python
   - FastAPI
   - SQLAlchemy
   - Pydantic
-- JWT (access token)
+- JWT
 - PostgreSQL
 - Redis
 - Docker
@@ -27,6 +27,7 @@ You can send requests for book:
 Requests for auth:
 - **POST** `/auth/register` - user registrator;
 - **POST** `/auth/login` - login for user;
+- **POST** `/auth/refresh` - refresh access token;
 - **POST** `/auth/logout` - logout account;
 - **GET** `/auth/me` - information about you.
 

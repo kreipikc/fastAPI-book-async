@@ -52,7 +52,7 @@ class UserRepository:
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:
-                return HTTPException(status_code=404, detail='Пользователь не найден')
+                raise HTTPException(status_code=404, detail='Пользователь не найден')
 
             stmt = (
                 update(UsersOrm)
@@ -75,7 +75,7 @@ class UserRepository:
             elif new_role == "admin":
                 stmt = update(UsersOrm).where(UsersOrm.id == id_user).values(is_admin=True)
             else:
-                return HTTPException(status_code=400, detail='Не валидная роль')
+                raise HTTPException(status_code=400, detail='Не валидная роль')
 
             await session.execute(stmt)
             await session.commit()
@@ -85,7 +85,7 @@ class UserRepository:
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:
-                return HTTPException(status_code=404, detail='Пользователь не найден')
+                raise HTTPException(status_code=404, detail='Пользователь не найден')
 
             await session.execute(delete(UsersOrm).where(UsersOrm.id == id_user))
             await session.commit()
