@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 
-class SUser(BaseModel):
+class User(BaseModel):
     email: EmailStr = Field(description="Электронная почта")
     password: str = Field(min_length=5, max_length=50, description="Пароль, от 5 до 50 знаков")
     phone_number: str = Field(description="Номер телефона в международном формате, начинающийся с '+'")
@@ -8,6 +8,6 @@ class SUser(BaseModel):
     last_name: str = Field(min_length=3, max_length=50, description="Фамилия, от 3 до 50 символов")
 
 
-class SUserAuth(BaseModel):
+class UserAuth(BaseModel):
     email: EmailStr = Field(description="Электронная почта")
     password: str = Field(min_length=5, max_length=50, description="Пароль, от 5 до 50 знаков")

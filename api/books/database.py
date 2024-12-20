@@ -1,6 +1,6 @@
 from typing import Optional
-from app.database import Model
 from sqlalchemy.orm import Mapped, mapped_column
+from ..database import Model
 
 
 class BookOrm(Model):

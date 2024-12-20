@@ -1,17 +1,7 @@
-import os
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
 from passlib.context import CryptContext
 from jose import jwt
-
-
-load_dotenv()
-SECRET_KEY_JWT = os.getenv("SECRET_KEY_JWT")
-ALGORITHM = os.getenv("ALGORITHM")
-if SECRET_KEY_JWT is None:
-    raise ValueError("SECRET_KEY_JWT environment variable not set")
-if ALGORITHM is None:
-    raise ValueError("ALGORITHM environment variable not set")
+from ..config import SECRET_KEY_JWT, ALGORITHM
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -1,10 +1,10 @@
 from pydantic import EmailStr
 from fastapi import HTTPException
 from sqlalchemy import select, update, delete
-from app.database import new_session
-from app.users.auth import verify_password
-from app.users.base import UsersOrm
-from app.users.schemas import SUser
+from .auth import verify_password
+from .database import UsersOrm
+from .schemas import User
+from ..database import new_session
 
 
 class UserRepository:
@@ -16,7 +16,7 @@ class UserRepository:
             return user
 
     @classmethod
-    async def add_user(cls, data: SUser) -> int:
+    async def add_user(cls, data: User) -> int:
         async with new_session() as session:
             user_dict = data.model_dump()
             user = UsersOrm(**user_dict)

@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.11"
 services:
   db:
     build: ./db
@@ -22,7 +22,7 @@ services:
       - "6379:6379"
 
   app:
-    build: ./app
+    build: api
     ports:
       - "80:80"
     depends_on:
@@ -37,6 +37,6 @@ services:
     command: >
       sh -c "while ! nc -z db 5432; do
       echo 'Waiting for database...'; sleep 1; done;
-      uvicorn app.main:app --host 0.0.0.0 --port 80"
+      uvicorn api.main:app --host 0.0.0.0 --port 80"
 volumes:
   postgres_data:

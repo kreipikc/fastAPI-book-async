@@ -1,9 +1,9 @@
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
-from app.books.base import BookOrm
-from app.database import new_session
-from app.books.schemas import SBook
-from app.redis import redis_client
+from .database import BookOrm
+from .schemas import Book
+from ..database import new_session
+from ..redis import redis_client
 import json
 
 
@@ -25,7 +25,7 @@ async def get_data_redis_books(id_book: int):
 
 class BookRepository:
     @classmethod
-    async def db_add_one(cls, data: SBook) -> int:
+    async def db_add_one(cls, data: Book) -> int:
         async with new_session() as session:
             book_dict = data.model_dump()
             # Можно указывать явно -> BookOrm(name=book_dict["name"], и т.д.)
@@ -55,7 +55,7 @@ class BookRepository:
             return book
 
     @classmethod
-    async def db_update(cls, data: SBook, id_book: int) -> bool:
+    async def db_update(cls, data: Book, id_book: int) -> bool:
         async with new_session() as session:
             stmt = update(BookOrm).where(BookOrm.id == id_book).values(**data.model_dump(exclude_unset=True))
             await session.execute(stmt)

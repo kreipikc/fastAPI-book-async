@@ -1,9 +1,8 @@
-from datetime import datetime, timezone
 from fastapi import Request, HTTPException, Depends
 from jose import JWTError, jwt, ExpiredSignatureError
-from app.users.auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
-from app.users.schemas import SUser
-from app.users.service import UserRepository
+from .auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
+from .schemas import User
+from .service import UserRepository
 
 
 def get_token(request: Request):
@@ -61,21 +60,21 @@ async def refresh_access_token(refresh_token: str = Depends(get_refresh_token)):
 
 
 # Проверка на роль студента
-async def get_current_student(current_user: SUser = Depends(get_current_user)):
+async def get_current_student(current_user: User = Depends(get_current_user)):
     if current_user.is_student:
         return current_user
     raise HTTPException(status_code=403, detail='Недостаточно прав!')
 
 
 # Проверка на роль учителя
-async def get_current_teacher(current_user: SUser = Depends(get_current_user)):
+async def get_current_teacher(current_user: User = Depends(get_current_user)):
     if current_user.is_teacher:
         return current_user
     raise HTTPException(status_code=403, detail='Недостаточно прав!')
 
 
 # Проверка на роль админа
-async def get_current_admin_user(current_user: SUser = Depends(get_current_user)):
+async def get_current_admin_user(current_user: User = Depends(get_current_user)):
     if current_user.is_admin:
         return current_user
     raise HTTPException(status_code=403, detail='Недостаточно прав!')
