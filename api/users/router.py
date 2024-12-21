@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import Response
 from .auth import get_password_hash, create_access_token, create_refresh_token
 from .dependencies import get_current_user, refresh_access_token
-from .schemas import User, UserAuth
+from .schemas import UserCreate, UserRead
 from .service import UserRepository
 from .dependencies import get_current_admin_user
 
@@ -12,12 +12,12 @@ router = APIRouter(prefix="/auth", tags=["Auth 🙎🏻‍♂️"])
 
 @router.post(
     path="/register",
-    summary="User registration",
-    description="User registration",
+    summary="UserCreate registration",
+    description="UserCreate registration",
     response_description="HTTP 201 STATUS",
     status_code=status.HTTP_201_CREATED
 )
-async def register_user(user_data: User):
+async def register_user(user_data: UserCreate):
     user = await UserRepository.find_one_or_none(user_data.email)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователь уже существует')
@@ -33,7 +33,7 @@ async def register_user(user_data: User):
     response_description="HTTP 200 STATUS",
     status_code=status.HTTP_200_OK
 )
-async def auth_user(response: Response, user_data: UserAuth):
+async def auth_user(response: Response, user_data: UserRead):
     check = await UserRepository.authenticate_user(email=user_data.email, password=user_data.password)
     if check is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверная почта или пароль')
@@ -76,10 +76,10 @@ async def logout_user(response: Response):
     path="/me",
     summary="Information about you",
     description="Information about you",
-    response_description="User info",
+    response_description="UserCreate info",
     status_code=status.HTTP_200_OK
 )
-async def get_me(user_data: User = Depends(get_current_user)):
+async def get_me(user_data: UserCreate = Depends(get_current_user)):
     return user_data
 
 
@@ -91,7 +91,7 @@ async def get_me(user_data: User = Depends(get_current_user)):
     response_description="The all users",
     status_code=status.HTTP_200_OK
 )
-async def get_all_users(user_data: User = Depends(get_current_admin_user)):
+async def get_all_users(user_data: UserCreate = Depends(get_current_admin_user)):
     return await UserRepository.find_all_user()
 
 
@@ -102,9 +102,9 @@ async def get_all_users(user_data: User = Depends(get_current_admin_user)):
     response_description="HTTP 200 STATUS",
     status_code=status.HTTP_200_OK
 )
-async def update_user_role(id_user: int, role: str , user_data: User = Depends(get_current_admin_user)):
+async def update_user_role(id_user: int, role: str, user_data: UserCreate = Depends(get_current_admin_user)):
     await UserRepository.change_role(id_user, role)
-    return {"message": "Роль у пользователя успешно изменена"}
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete(
@@ -114,6 +114,6 @@ async def update_user_role(id_user: int, role: str , user_data: User = Depends(g
     response_description="HTTP 204 STATUS",
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def delete_user(id_user: int, user_data: User = Depends(get_current_admin_user)):
+async def delete_user(id_user: int, user_data: UserCreate = Depends(get_current_admin_user)):
     await UserRepository.delete_user_by_id(id_user)
-    return {"message": "Пользователь успешно удален"}
+    return Response(status_code=status.HTTP_200_OK)

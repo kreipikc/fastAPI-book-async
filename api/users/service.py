@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, update, delete
 from .auth import verify_password
 from .database import UsersOrm
-from .schemas import User
+from .schemas import UserCreate
 from ..database import new_session
 
 
@@ -16,7 +16,7 @@ class UserRepository:
             return user
 
     @classmethod
-    async def add_user(cls, data: User) -> int:
+    async def add_user(cls, data: UserCreate) -> int:
         async with new_session() as session:
             user_dict = data.model_dump()
             user = UsersOrm(**user_dict)

@@ -1,5 +1,7 @@
+from typing import List
 from fastapi import APIRouter, status
-from .schemas import Book
+from fastapi.responses import Response
+from .schemas import BookCreate, BookRead
 from .service import BookRepository
 
 
@@ -10,20 +12,23 @@ router = APIRouter(prefix="/books", tags=["Books 📚"])
     path="/",
     summary="Get all books",
     description="Get all books",
-    status_code=status.HTTP_200_OK
+    response_description="A list of all books in the database",
+    status_code=status.HTTP_200_OK,
+    response_model=List[BookRead]
 )
 async def get_all():
     books = await BookRepository.db_get_all()
-    return {"books": books}
+    return [BookRead.model_validate(row) for row in books]
 
 
 @router.post(
     path="/",
     summary="Add new book",
     description="Add new book",
-    status_code=status.HTTP_201_CREATED
+    response_description="The ID of the newly created book",
+    status_code=status.HTTP_201_CREATED,
 )
-async def add_book(book: Book):
+async def add_book(book: BookCreate):
     book_id = await BookRepository.db_add_one(book)
     return {"book_id": book_id}
 
@@ -32,30 +37,38 @@ async def add_book(book: Book):
     path="/{id_book}",
     summary="Get a book by id",
     description="Get a book by id",
-    status_code=status.HTTP_200_OK
+    response_description="The details of the book with the specified ID",
+    status_code=status.HTTP_200_OK,
+    response_model=BookRead
 )
 async def get_one(id_book: int):
     book = await BookRepository.db_get_one(id_book)
-    return {"book": book}
+    return BookRead.model_validate(book)
 
 
 @router.put(
     path="/{id_book}",
     summary="Update a specific book",
     description="Update a specific book",
+    response_description="A message indicating whether the update was successful",
     status_code=status.HTTP_200_OK
 )
-async def update_book(book: Book, id_book: int):
+async def update_book(book: BookCreate, id_book: int, response: Response):
     result = await BookRepository.db_update(book, id_book)
-    return {"Success": result}
+    if result:
+        return Response(status_code=status.HTTP_200_OK)
+    return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.delete(
     path="/{id_book}",
     summary="Delete a specific book",
     description="Delete a specific book",
+    response_description="No content is returned if the deletion was successful",
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def delete_book(id_book: int):
     result = await BookRepository.db_delete(id_book)
-    return {"Success": result}
+    if result:
+        return Response(status_code=status.HTTP_200_OK)
+    return Response(status_code=status.HTTP_404_NOT_FOUND)

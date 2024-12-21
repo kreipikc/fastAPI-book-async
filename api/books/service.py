@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from .database import BookOrm
-from .schemas import Book
+from .schemas import BookCreate, BookRead
 from ..database import new_session
 from ..redis import redis_client
 import json
@@ -25,7 +25,7 @@ async def get_data_redis_books(id_book: int):
 
 class BookRepository:
     @classmethod
-    async def db_add_one(cls, data: Book) -> int:
+    async def db_add_one(cls, data: BookCreate) -> int:
         async with new_session() as session:
             book_dict = data.model_dump()
             # Можно указывать явно -> BookOrm(name=book_dict["name"], и т.д.)
@@ -41,21 +41,21 @@ class BookRepository:
             query = select(BookOrm)
             result = await session.execute(query)
             book_models = result.scalars().all()
-            return book_models
+            return [BookRead(id=book.id, name=book.name, description=book.description) for book in book_models]
 
     @classmethod
     async def db_get_one(cls, id_book: int):
         result = await get_data_redis_books(id_book)
         if result:
-            return result
+            return BookRead(**result)
 
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
             await set_data_redis_books(book)
-            return book
+            return BookRead(id=book.id, name=book.name, description=book.description)
 
     @classmethod
-    async def db_update(cls, data: Book, id_book: int) -> bool:
+    async def db_update(cls, data: BookCreate, id_book: int) -> bool:
         async with new_session() as session:
             stmt = update(BookOrm).where(BookOrm.id == id_book).values(**data.model_dump(exclude_unset=True))
             await session.execute(stmt)
