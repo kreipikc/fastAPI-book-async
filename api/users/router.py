@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import Response
 from .auth import get_password_hash, create_access_token, create_refresh_token
-from .dependencies import get_current_user, refresh_access_token
+from .dependencies import get_current_user, refresh_access_token, get_token
 from .schemas import UserCreate, UserRead
-from .service import UserRepository
+from .service import UserRepository, invalidate_token
 from .dependencies import get_current_admin_user
 
 
@@ -33,16 +33,13 @@ async def register_user(user_data: UserCreate):
     response_description="HTTP 200 STATUS",
     status_code=status.HTTP_200_OK
 )
-async def auth_user(response: Response, user_data: UserRead):
+async def auth_user(user_data: UserRead):
     check = await UserRepository.authenticate_user(email=user_data.email, password=user_data.password)
     if check is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверная почта или пароль')
 
     access_token = create_access_token({"sub": str(check.id)})
     refresh_token = create_refresh_token({"sub": str(check.id)})
-
-    response.set_cookie(key="users_access_token", value=access_token, httponly=True)
-    response.set_cookie(key="users_refresh_token", value=refresh_token, httponly=True)
 
     return {"access_token": access_token, "refresh_token": refresh_token}
 
@@ -54,8 +51,7 @@ async def auth_user(response: Response, user_data: UserRead):
     response_description="A JSON object containing the new access token and its type",
     status_code=status.HTTP_200_OK
 )
-async def refresh_token_endpoint(response: Response, new_token: dict = Depends(refresh_access_token)):
-    response.set_cookie(key="users_access_token", value=new_token["access_token"], httponly=True)
+async def refresh_token_endpoint(new_token: dict = Depends(refresh_access_token)):
     return new_token
 
 
@@ -66,9 +62,8 @@ async def refresh_token_endpoint(response: Response, new_token: dict = Depends(r
     response_description="HTTP 204 STATUS",
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def logout_user(response: Response):
-    response.delete_cookie(key="users_access_token")
-    response.delete_cookie(key="users_refresh_token")
+async def logout_user(refresh_token: str = Depends(get_token)):
+    await invalidate_token(refresh_token)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

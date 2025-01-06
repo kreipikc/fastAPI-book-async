@@ -2,20 +2,18 @@ from fastapi import Request, HTTPException, Depends
 from jose import JWTError, jwt, ExpiredSignatureError
 from .auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
 from .schemas import UserCreate
-from .service import UserRepository
+from .service import UserRepository, is_token_invalidated
 
 
 def get_token(request: Request):
-    token = request.cookies.get('users_access_token')
-    if not token:
-        raise HTTPException(status_code=401, detail='Access token not found')
-    return token
+    auth_header = request.headers.get('Authorization')
+    if auth_header is None:
+        raise HTTPException(status_code=401, detail='Authorization header not found')
 
+    token_type, token = auth_header.split()
+    if token_type.lower() != 'bearer':
+        raise HTTPException(status_code=401, detail='Invalid token type')
 
-def get_refresh_token(request: Request):
-    token = request.cookies.get('users_refresh_token')
-    if not token:
-        raise HTTPException(status_code=401, detail='Refresh token not found')
     return token
 
 
@@ -38,11 +36,14 @@ async def get_current_user(token: str = Depends(get_token)):
     return user
 
 
-async def refresh_access_token(refresh_token: str = Depends(get_refresh_token)):
+async def refresh_access_token(refresh_token: str = Depends(get_token)):
+    if await is_token_invalidated(refresh_token):
+        raise HTTPException(status_code=401, detail='Refresh token is invalidated')
+
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
     except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail='Access token expired')
+        raise HTTPException(status_code=401, detail='Refresh token expired')
     except JWTError:
         raise HTTPException(status_code=401, detail='Invalid refresh token')
 
