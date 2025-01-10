@@ -1,17 +1,13 @@
 from fastapi import FastAPI, status
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
-from .database import create_tables, delete_tables
 from .books.router import router as books_router
 from .users.router import router as auth_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # await delete_tables()
-    # print("Таблицы очищены")
-    # await create_tables()
-    # print("Таблицы готовы к работе")
+    print("Запуск")
     yield
     print("Выключение")
 
