@@ -6,6 +6,7 @@ This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and
   - FastAPI
   - SQLAlchemy
   - Pydantic
+  - Alembic
 - JWT
 - PostgreSQL
 - Redis
