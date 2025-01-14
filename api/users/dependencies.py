@@ -1,23 +1,16 @@
-from fastapi import Request, HTTPException, Depends
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt, ExpiredSignatureError
 from .auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
 from .schemas import UserCreate
-from .service import UserRepository, is_token_invalidated
+from .service import UserRepository
 
 
-def get_token(request: Request):
-    auth_header = request.headers.get('Authorization')
-    if auth_header is None:
-        raise HTTPException(status_code=401, detail='Authorization header not found')
-
-    token_type, token = auth_header.split()
-    if token_type.lower() != 'bearer':
-        raise HTTPException(status_code=401, detail='Invalid token type')
-
-    return token
+http_bearer = HTTPBearer()
 
 
-async def get_current_user(token: str = Depends(get_token)):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)):
+    token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
     except ExpiredSignatureError:
@@ -27,19 +20,16 @@ async def get_current_user(token: str = Depends(get_token)):
 
     user_id = payload.get('sub')
     if not user_id:
-        raise HTTPException(status_code=401, detail='UserCreate ID not found')
+        raise HTTPException(status_code=401, detail='User ID not found')
 
     user = await UserRepository.find_one_or_none_by_id(int(user_id))
     if not user:
-        raise HTTPException(status_code=401, detail='UserCreate not found')
+        raise HTTPException(status_code=401, detail='User not found')
 
     return user
 
 
-async def refresh_access_token(refresh_token: str = Depends(get_token)):
-    if await is_token_invalidated(refresh_token):
-        raise HTTPException(status_code=401, detail='Refresh token is invalidated')
-
+async def refresh_access_token(refresh_token: str):
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
     except ExpiredSignatureError:
@@ -49,14 +39,14 @@ async def refresh_access_token(refresh_token: str = Depends(get_token)):
 
     user_id = payload.get('sub')
     if not user_id:
-        raise HTTPException(status_code=401, detail='UserCreate ID not found')
+        raise HTTPException(status_code=401, detail='User ID not found')
 
     user = await UserRepository.find_one_or_none_by_id(int(user_id))
     if not user:
-        raise HTTPException(status_code=401, detail='UserCreate not found')
+        raise HTTPException(status_code=401, detail='User not found')
 
     new_access_token = create_access_token({"sub": str(user.id)})
-    return {"access_token": new_access_token}
+    return new_access_token
 
 
 

@@ -1,9 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.responses import Response
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Depends,
+    status,
+    Request,
+    Response,
+)
 from .auth import get_password_hash, create_access_token, create_refresh_token
-from .dependencies import get_current_user, refresh_access_token, get_token
-from .schemas import UserCreate, UserRead
-from .service import UserRepository, invalidate_token
+from .dependencies import get_current_user, refresh_access_token
+from .schemas import UserCreate, UserRead, Token
+from .service import UserRepository
 from .dependencies import get_current_admin_user
 
 
@@ -29,30 +35,42 @@ async def register_user(user_data: UserCreate):
 @router.post(
     path="/login",
     summary="Login for user",
-    description="Login for user",
-    response_description="HTTP 200 STATUS",
-    status_code=status.HTTP_200_OK
+    description="Authorization in the application",
+    response_description="Access token (Bearer) and refresh token (Cookie)",
+    status_code=status.HTTP_200_OK,
+    response_model=Token,
 )
-async def auth_user(user_data: UserRead):
+async def auth_user(response: Response, user_data: UserRead):
     check = await UserRepository.authenticate_user(email=user_data.email, password=user_data.password)
     if check is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверная почта или пароль')
 
-    access_token = create_access_token({"sub": str(check.id)})
-    refresh_token = create_refresh_token({"sub": str(check.id)})
+    access_token = create_access_token(data={"sub": str(check.id)})
+    create_refresh_token(response=response, data={"sub": str(check.id)})
 
-    return {"access_token": access_token, "refresh_token": refresh_token}
+    return Token(access_token=access_token, token_type="Bearer")
 
 
 @router.post(
     path="/refresh",
     summary="Refresh access token",
     description="Refresh access token",
-    response_description="A JSON object containing the new access token and its type",
-    status_code=status.HTTP_200_OK
+    response_description="Bearer Token (Access)",
+    status_code=status.HTTP_200_OK,
+    response_model=Token,
 )
-async def refresh_token_endpoint(new_token: dict = Depends(refresh_access_token)):
-    return new_token
+async def refresh_token_endpoint(request: Request):
+    try:
+        refresh_token = request.cookies.get("refresh_token")
+        if not refresh_token:
+            raise ValueError("Refresh token not found")
+
+        access_token = await refresh_access_token(refresh_token=refresh_token)
+        return Token(access_token=access_token, token_type="Bearer")
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Refresh token not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.__str__())
 
 
 @router.post(
@@ -62,9 +80,14 @@ async def refresh_token_endpoint(new_token: dict = Depends(refresh_access_token)
     response_description="HTTP 204 STATUS",
     status_code=status.HTTP_204_NO_CONTENT
 )
-async def logout_user(refresh_token: str = Depends(get_token)):
-    await invalidate_token(refresh_token)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+async def logout_user(response: Response):
+    response.delete_cookie(
+        key="refresh_token",
+        secure=False,
+        httponly=True,
+    )
+    response.status_code = status.HTTP_200_OK
+    return response
 
 
 @router.get(

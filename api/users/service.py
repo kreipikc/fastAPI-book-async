@@ -5,14 +5,6 @@ from .auth import verify_password
 from .database import UsersOrm
 from .schemas import UserCreate
 from ..database import new_session
-from ..redis import redis_client
-
-
-async def invalidate_token(token: str):
-    await redis_client.set(token, "invalid", ex=3600)
-
-async def is_token_invalidated(token: str) -> bool:
-    return await redis_client.exists(token)
 
 
 class UserRepository:

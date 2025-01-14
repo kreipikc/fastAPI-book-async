@@ -41,7 +41,7 @@ services:
     command: >
       sh -c "while ! nc -z db 5432; do
       echo 'Waiting for database...'; sleep 1; done;
-      ls -l && alembic upgrade head &&
+      alembic upgrade head &&
       uvicorn api.main:app --host 0.0.0.0 --port 80"
 volumes:
   postgres_data:
