@@ -33,9 +33,9 @@ Requests for auth:
 - **GET** `/auth/me` - information about you.
 
 Requests for admin:
-- **GET** `/admin/all_users` - information about all users;
-- **PUT** `/admin/update_user_role` - update role for user;
-- **DELETE** `/admin/delete_user` - delete user.
+- **GET** `/auth/all_users` - information about all users;
+- **PUT** `/auth/update_user_role` - update role for user;
+- **DELETE** `/auth/delete_user` - delete user.
 
 You can also use `/docs` to check the sending of requests, where all the endpoints will be
 

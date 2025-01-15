@@ -94,7 +94,7 @@ async def logout_user(response: Response):
     path="/me",
     summary="Information about you",
     description="Information about you",
-    response_description="UserCreate info",
+    response_description="User info",
     status_code=status.HTTP_200_OK
 )
 async def get_me(user_data: UserCreate = Depends(get_current_user)):
