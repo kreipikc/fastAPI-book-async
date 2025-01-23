@@ -24,12 +24,12 @@ router = APIRouter(prefix="/auth", tags=["Auth 🙎🏻‍♂️"])
     status_code=status.HTTP_201_CREATED
 )
 async def register_user(user_data: UserCreate):
-    user = await UserRepository.find_one_or_none(user_data.email)
-    if user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователь уже существует')
-    user_data.password = get_password_hash(user_data.password)
-    await UserRepository.add_user(user_data)
-    return Response(status_code=status.HTTP_201_CREATED)
+    try:
+        user_data.password = get_password_hash(user_data.password)
+        await UserRepository.add_user(user_data)
+        return Response(status_code=status.HTTP_201_CREATED)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
@@ -43,7 +43,7 @@ async def register_user(user_data: UserCreate):
 async def auth_user(response: Response, user_data: UserRead):
     check = await UserRepository.authenticate_user(email=user_data.email, password=user_data.password)
     if check is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверная почта или пароль')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверная почта или пароль")
 
     access_token = create_access_token(data={"sub": str(check.id)})
     create_refresh_token(response=response, data={"sub": str(check.id)})

@@ -1,6 +1,7 @@
 from pydantic import EmailStr
 from fastapi import HTTPException
 from sqlalchemy import select, update, delete
+from sqlalchemy.exc import IntegrityError
 from .auth import verify_password
 from .database import UsersOrm
 from .schemas import UserCreate
@@ -34,14 +35,21 @@ class UserRepository:
 
         Returns:
             A int, the ID of the newly created user.
+
+        Raises:
+            ValueError: If a user with the same email already exists.
         """
         async with new_session() as session:
-            user_dict = data.model_dump()
-            user = UsersOrm(**user_dict)
-            session.add(user)  # Добавить изменения
-            await session.flush()  # Отправит изменение, не завершая транзакцию
-            await session.commit()  # Сохранит все изменения в БД, завершит транзакцию
-            return user.id
+            try:
+                user_dict = data.model_dump()
+                user = UsersOrm(**user_dict)
+                session.add(user)
+                await session.flush()
+                await session.commit()
+                return user.id
+            except IntegrityError:
+                await session.rollback()
+                raise ValueError("User with this email already exists")
 
     @classmethod
     async def authenticate_user(cls, email: EmailStr, password: str):

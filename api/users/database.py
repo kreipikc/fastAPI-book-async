@@ -10,7 +10,7 @@ class UsersOrm(Model):
     phone_number: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str]
-    email: Mapped[str]
+    email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
 
     is_user: Mapped[bool] = mapped_column(default=True, server_default=text('true'), nullable=False)
