@@ -42,4 +42,5 @@ You can also use `/docs` to check the sending of requests, where all the endpoin
 ## How usage Docker?
 1. Download git and docker to your server
 2. Clone the entire project from the github - `git clone <link>`
-3. Then use docker-compose to run the project - `docker-compose up`
+3. Create a ".env" file in the root directory and copy everything from "example.env.txt " and adjust the parameters as needed
+4. Then use docker-compose to run the project - `docker-compose up`

@@ -25,7 +25,7 @@ async def get_all():
     path="/",
     summary="Add new book",
     description="Add new book",
-    response_description="The ID of the newly created book",
+    response_description="The book object with the ID from the database",
     status_code=status.HTTP_201_CREATED,
     response_model=BookRead
 )
