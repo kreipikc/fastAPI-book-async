@@ -27,10 +27,11 @@ async def get_all():
     description="Add new book",
     response_description="The ID of the newly created book",
     status_code=status.HTTP_201_CREATED,
+    response_model=BookRead
 )
 async def add_book(book: BookCreate):
     book_id = await BookRepository.db_add_one(book)
-    return {"book_id": book_id}
+    return BookRead(id=book_id, name=book.name, description=book.description)
 
 
 @router.get(

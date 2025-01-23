@@ -39,5 +39,11 @@ class UserRead(BaseModel):
 
 
 class Token(BaseModel):
+    """An Access token that returns to user.
+
+        Attributes:
+            access_token: Encoded jwt token.
+            token_type: Token type (Bearer).
+    """
     access_token: str
     token_type: str

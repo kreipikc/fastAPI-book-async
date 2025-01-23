@@ -10,6 +10,14 @@ from ..database import new_session
 class UserRepository:
     @classmethod
     async def find_one_or_none(cls, email: str):
+        """Finds a user by email.
+
+        Args:
+            email: The email of the user to find.
+
+        Returns:
+            A Optional[UsersOrm], the user object if found, otherwise None.
+        """
         async with new_session() as session:
             result = await session.execute(select(UsersOrm).where(UsersOrm.email == email))
             user = result.scalar_one_or_none()
@@ -17,6 +25,16 @@ class UserRepository:
 
     @classmethod
     async def add_user(cls, data: UserCreate) -> int:
+        """Adds a new user to the database.
+
+        This method adds a new user to the database and returns the ID of the created user.
+
+        Args:
+            data: The data for the new user.
+
+        Returns:
+            A int, the ID of the newly created user.
+        """
         async with new_session() as session:
             user_dict = data.model_dump()
             user = UsersOrm(**user_dict)
@@ -27,6 +45,15 @@ class UserRepository:
 
     @classmethod
     async def authenticate_user(cls, email: EmailStr, password: str):
+        """Authenticates a user by email and password.
+
+        Args:
+            email: The email of the user to authenticate.
+            password: The password of the user to authenticate.
+
+        Returns:
+            A Optional[UsersOrm], the user object if authentication is successful, otherwise None.
+        """
         user = await cls.find_one_or_none(email)
         if not user or verify_password(default_password=password, hashed_password=user.password) is False:
             return None
@@ -34,6 +61,14 @@ class UserRepository:
 
     @classmethod
     async def find_one_or_none_by_id(cls, id_user: int):
+        """Finds a user by ID.
+
+        Args:
+            id_user (int): The ID of the user to find.
+
+        Returns:
+            A Optional[UsersOrm], the user object if found, otherwise None.
+        """
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user:
@@ -42,6 +77,11 @@ class UserRepository:
 
     @classmethod
     async def find_all_user(cls):
+        """Finds all users in the database.
+
+       Returns:
+           A List[UsersOrm], list of all user objects.
+       """
         async with new_session() as session:
             result = await session.execute(select(UsersOrm))
             user_models = result.scalars().all()
@@ -49,6 +89,20 @@ class UserRepository:
 
     @classmethod
     async def change_role(cls, id_user: int, new_role: str):
+        """Changes the role of a user.
+
+        This method changes the role of a user in the database.
+
+        Args:
+            id_user (int): The ID of the user whose role is to be changed.
+            new_role (str): The new role to assign to the user.
+
+        Returns:
+            None
+
+        Raises:
+            HTTPException: If the user is not found or the role is invalid.
+        """
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:
@@ -82,6 +136,16 @@ class UserRepository:
 
     @classmethod
     async def delete_user_by_id(cls, id_user: int):
+        """Deletes a user by ID.
+
+        This method deletes a user from the database based on the provided ID.
+
+        Args:
+            id_user (int): The ID of the user to delete.
+
+        Raises:
+            HTTPException: If the user is not found.
+        """
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from .database import BookOrm
@@ -8,6 +10,13 @@ import json
 
 
 async def set_data_redis_books(book: BookOrm):
+    """Sets book data in Redis cache.
+
+    This function converts the book object to a dictionary, serializes it to JSON, and stores it in Redis with an expiration time of 30 seconds.
+
+    Args:
+        book (BookOrm): The book object to be cached.
+    """
     book_dict = {
         "id": book.id,
         "name": book.name,
@@ -16,16 +25,36 @@ async def set_data_redis_books(book: BookOrm):
     json_book = json.dumps(book_dict)
     await redis_client.set(book.id, json_book, 30)
 
-async def get_data_redis_books(id_book: int):
+async def get_data_redis_books(id_book: int) -> Optional[BookRead]:
+    """Retrieves book data from Redis cache.
+
+    This function retrieves the book data from Redis, deserializes it from JSON, and returns it as a BookRead object.
+
+    Args:
+        id_book (int): The ID of the book to retrieve.
+
+    Returns:
+        A Optional[BookRead], the book data as a BookRead object if found in Redis, otherwise None.
+    """
     book = await redis_client.get(id_book)
     if book:
-        return json.loads(book)
+        return BookRead(**json.loads(book))
     return None
 
 
 class BookRepository:
     @classmethod
     async def db_add_one(cls, data: BookCreate) -> int:
+        """Adds a new book to the database.
+
+        This method adds a new book to the database and returns the ID of the created book.
+
+        Args:
+            data (BookCreate): The data for the new book.
+
+        Returns:
+            A int, the ID of the newly created book.
+        """
         async with new_session() as session:
             book_dict = data.model_dump()
             # Можно указывать явно -> BookOrm(name=book_dict["name"], и т.д.)
@@ -37,6 +66,11 @@ class BookRepository:
 
     @classmethod
     async def db_get_all(cls):
+        """Retrieves all books from the database.
+
+        Returns:
+            A List[BookRead], list of all book objects.
+        """
         async with new_session() as session:
             query = select(BookOrm)
             result = await session.execute(query)
@@ -45,9 +79,17 @@ class BookRepository:
 
     @classmethod
     async def db_get_one(cls, id_book: int):
+        """Retrieves a single book by ID from Redis or the database.
+
+        Args:
+            id_book (int): The ID of the book to retrieve.
+
+        Returns:
+            A BookRead, the book object if found.
+        """
         result = await get_data_redis_books(id_book)
         if result:
-            return BookRead(**result)
+            return BookRead.model_validate(result)
 
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
@@ -56,6 +98,15 @@ class BookRepository:
 
     @classmethod
     async def db_update(cls, data: BookCreate, id_book: int) -> bool:
+        """Updates an existing book in the database.
+
+        Args:
+            data (BookCreate): The updated data for the book.
+            id_book (int): The ID of the book to update.
+
+        Returns:
+            A bool, true if the update is successful.
+        """
         async with new_session() as session:
             stmt = update(BookOrm).where(BookOrm.id == id_book).values(**data.model_dump(exclude_unset=True))
             await session.execute(stmt)
@@ -64,6 +115,17 @@ class BookRepository:
 
     @classmethod
     async def db_delete(cls, id_book: int):
+        """Deletes a book from the database by ID.
+
+        Args:
+            id_book (int): The ID of the book to delete.
+
+        Returns:
+            A bool, true if the book is successfully deleted, False if the book is not found.
+
+        Raises:
+            NoResultFound: If the book is not found in the database.
+        """
         async with new_session() as session:
             try:
                 book = await session.get(BookOrm, id_book)
