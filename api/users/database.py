@@ -1,6 +1,7 @@
 from ..database import Model
-from sqlalchemy import text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import text, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from ..roles.database import RolesOrm # Для того чтобы alembic нашел таблицу roles для связи
 
 
 class UsersOrm(Model):
@@ -13,9 +14,9 @@ class UsersOrm(Model):
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
 
-    is_user: Mapped[bool] = mapped_column(default=True, server_default=text('true'), nullable=False)
-    is_student: Mapped[bool] = mapped_column(default=False, server_default=text('false'), nullable=False)
-    is_teacher: Mapped[bool] = mapped_column(default=False, server_default=text('false'), nullable=False)
-    is_admin: Mapped[bool] = mapped_column(default=False, server_default=text('false'), nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=text('true'), nullable=False)
+
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=1)
+    roles = relationship(argument="RolesOrm", back_populates="users")
 
     extend_existing = True

@@ -8,7 +8,7 @@ from fastapi import (
 )
 from .auth import get_password_hash, create_access_token, create_refresh_token
 from .dependencies import get_current_user, refresh_access_token
-from .schemas import UserCreate, UserRead, Token
+from .schemas import UserCreate, UserRead, Token, UserInfo
 from .service import UserRepository
 
 
@@ -94,7 +94,8 @@ async def logout_user(response: Response):
     summary="Information about you",
     description="Information about you",
     response_description="User info",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    response_model=UserInfo
 )
-async def get_me(user_data: UserCreate = Depends(get_current_user)):
+async def get_me(user_data: UserInfo = Depends(get_current_user)):
     return user_data
