@@ -8,7 +8,7 @@ async def get_current_admin_user(current_user: UserInfo = Depends(get_current_us
     """Checks if the current user has the role of an admin.
 
     Args:
-        current_user (UserCreate): The current user object retrieved from the dependency.
+        current_user (UserInfo): The current user object retrieved from the dependency.
 
     Returns:
         A UserCreate, the current user object if they have the role of an admin.

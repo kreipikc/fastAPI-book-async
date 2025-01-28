@@ -1,7 +1,6 @@
 from ..database import Model
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from ..roles.database import RolesOrm # Для того чтобы alembic нашел таблицу roles для связи
 
 
 class UsersOrm(Model):

@@ -8,6 +8,7 @@ from alembic import context
 from api.config import DATABASE_URL
 from api.books.database import *
 from api.users.database import *
+from api.roles.database import *
 from api.database import Model
 
 config = context.config
