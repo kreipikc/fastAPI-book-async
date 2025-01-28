@@ -38,7 +38,7 @@ async def add_role(data_role: RoleCreate, user_data = Depends(get_current_admin_
     path="/update_role",
     summary="Update role",
     description="Update role",
-    response_description="Data from the database for the updated role",
+    response_description="Status response",
     status_code=status.HTTP_200_OK,
 )
 async def update_role(role_id: int, data_role: RoleCreate, user_data = Depends(get_current_admin_user)):
@@ -50,7 +50,7 @@ async def update_role(role_id: int, data_role: RoleCreate, user_data = Depends(g
     path="/delete_role",
     summary="Delete role by ID",
     description="Delete role by ID",
-    response_description="",
+    response_description="Status response",
     status_code=status.HTTP_200_OK
 )
 async def delete_role(role_id: int, user_data = Depends(get_current_admin_user)):
