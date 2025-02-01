@@ -2,11 +2,49 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt, ExpiredSignatureError
 from .auth import SECRET_KEY_JWT, ALGORITHM, create_access_token
+from .database import UsersOrm
+from .responses.http_errors import HTTTPError
 from .schemas import UserInfo
 from .service import UserRepository
 
 
 http_bearer = HTTPBearer()
+
+
+async def descript_and_check_token(token: str) -> UsersOrm:
+    """Decodes and validates a JWT token, retrieves the corresponding user, and checks the user's status.
+
+    Args:
+        token (str): The JWT token to be decoded and validated.
+
+    Returns:
+        A UsersOrm, the user object corresponding to the validated token.
+
+    Raises:
+        HTTTPError.BAD_CREDENTIALS_403: If the token has expired.
+        HTTTPError.INVALID_TOKEN_401: If the token is invalid or does not contain a user ID.
+        HTTTPError.DATA_OUT_OF_DATE_403: If the user corresponding to the token does not exist.
+        HTTTPError.USER_NOT_ACTIVE_403: If the user corresponding to the token is not active.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
+    except ExpiredSignatureError:
+        raise HTTTPError.BAD_CREDENTIALS_403
+    except JWTError:
+        raise HTTTPError.INVALID_TOKEN_401
+
+    user_id = payload.get('sub')
+    if not user_id:
+        raise HTTTPError.INVALID_TOKEN_401
+
+    user = await UserRepository.find_one_or_none_by_id(int(user_id))
+    if not user:
+        raise HTTTPError.DATA_OUT_OF_DATE_403
+
+    if not user.is_active:
+        raise HTTTPError.USER_NOT_ACTIVE_403
+
+    return user
 
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)) -> UserInfo:
@@ -16,34 +54,16 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(h
         credentials (HTTPAuthorizationCredentials): The HTTP authorization credentials containing the JWT token.
 
     Returns:
-        A UserInfo, The user object corresponding to the valid JWT token.
-
-    Raises:
-        HTTPException: If the JWT token is expired, invalid, or if the user ID is not found, user in not active or the user does not exist.
+        UserInfo: The user object corresponding to the valid JWT token.
     """
     token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Access token expired')
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid access token!')
 
-    user_id = payload.get('sub')
-    if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User ID not found')
-
-    user = await UserRepository.find_one_or_none_by_id(int(user_id))
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
-
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not active")
+    user = await descript_and_check_token(token)
 
     return UserInfo.model_validate(user.__dict__)
 
 
-async def refresh_access_token(refresh_token: str):
+async def refresh_access_token(refresh_token: str) -> str:
     """Refreshes the access token using a provided refresh token.
 
     Args:
@@ -51,27 +71,8 @@ async def refresh_access_token(refresh_token: str):
 
     Returns:
         A str, new access token.
-
-    Raises:
-        HTTPException: If the JWT token is expired, invalid, or if the user ID is not found, user in not active or the user does not exist.
     """
-    try:
-        payload = jwt.decode(refresh_token, SECRET_KEY_JWT, algorithms=[ALGORITHM])
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Refresh token expired')
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid refresh token')
-
-    user_id = payload.get('sub')
-    if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User ID not found')
-
-    user = await UserRepository.find_one_or_none_by_id(int(user_id))
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
-
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not active")
+    user = await descript_and_check_token(refresh_token)
 
     new_access_token = create_access_token({"sub": str(user.id)})
     return new_access_token

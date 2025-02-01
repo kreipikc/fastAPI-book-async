@@ -1,7 +1,7 @@
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from typing import List
 from .database import RolesOrm
+from .responses.http_errors import HTTTPError
 from .schemas import RoleRead, RoleCreate
 from ..database import new_session
 
@@ -45,12 +45,12 @@ class RoleRepository:
             A RoleRead, the role object corresponding to the provided role ID.
 
         Raises:
-            HTTPException: If the role with the given ID is not found.
+            HTTTPError.ROLE_NOT_FOUND_404: If the role with the given ID is not found.
         """
         async with new_session() as session:
             role_exists = await session.get(RolesOrm, role_id)
             if not role_exists:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+                raise HTTTPError.ROLE_NOT_FOUND_404
 
             return RoleRead.model_validate(role_exists.__dict__)
 
@@ -96,13 +96,13 @@ class RoleRepository:
             None
 
         Raises:
-            HTTPException: If the role with the given ID is not found.
+            HTTTPError.ROLE_NOT_FOUND_404: If the role with the given ID is not found.
         """
         async with new_session() as session:
             result = await session.execute(select(RolesOrm).where(RolesOrm.id == role_id))
             role_old = result.scalars().one_or_none()
             if role_old is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+                raise HTTTPError.ROLE_NOT_FOUND_404
 
             role_old.role_type = role_data.role_type
             await session.commit()
@@ -118,7 +118,7 @@ class RoleRepository:
             None
 
         Raises:
-            HTTPException: If the role with the given ID is not found.
+            HTTTPError.ROLE_NOT_FOUND_404: If the role with the given ID is not found.
         """
         async with new_session() as session:
             role = await session.get(RolesOrm, role_id)
@@ -126,4 +126,4 @@ class RoleRepository:
                 await session.delete(role)
                 await session.commit()
             else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+                raise HTTTPError.ROLE_NOT_FOUND_404

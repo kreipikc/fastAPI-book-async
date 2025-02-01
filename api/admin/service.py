@@ -1,7 +1,8 @@
-from fastapi import HTTPException, status
 from typing import List
 from ..database import new_session
 from ..roles.database import RolesOrm
+from ..roles.responses.http_errors import HTTTPError as HTTTPErrorRoles
+from .responses.http_errors import HTTTPError as HTTTPErrorAdmin
 from ..users.database import UsersOrm
 from sqlalchemy import select, update, delete
 from ..users.schemas import UserInfo
@@ -32,16 +33,17 @@ class AdminRepository:
             None
 
         Raises:
-            HTTPException: If the user or the role is not found, an HTTP 404 error is raised.
+            HTTTPErrorAdmin.USER_NOT_FOUND_404: If the user not found
+            HTTTPErrorRoles.ROLE_NOT_FOUND_404: If the role not found
         """
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
+                raise HTTTPErrorAdmin.USER_NOT_FOUND_404
 
             role = await session.get(RolesOrm, new_role_id)
             if role is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Роль не найдена')
+                raise HTTTPErrorRoles.ROLE_NOT_FOUND_404
 
             await session.execute(update(UsersOrm).where(UsersOrm.id == id_user).values(role_id=role.id))
             await session.commit()
@@ -57,12 +59,12 @@ class AdminRepository:
             id_user (int): The ID of the user to delete.
 
         Raises:
-            HTTPException: If the user is not found.
+            HTTTPErrorAdmin.USER_NOT_FOUND_404: If the user is not found.
         """
         async with new_session() as session:
             user = await session.get(UsersOrm, id_user)
             if user is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
+                raise HTTTPErrorAdmin.USER_NOT_FOUND_404
 
             await session.execute(delete(UsersOrm).where(UsersOrm.id == id_user))
             await session.commit()

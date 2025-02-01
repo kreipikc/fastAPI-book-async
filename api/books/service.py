@@ -1,8 +1,8 @@
 from typing import Optional
-
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from .database import BookOrm
+from .responses.http_errors import HTTTPError
 from .schemas import BookCreate, BookRead
 from ..database import new_session
 from ..redis import redis_client
@@ -86,6 +86,9 @@ class BookRepository:
 
         Returns:
             A BookRead, the book object if found.
+
+        Raises:
+            HTTTPError.BOOK_NOT_FOUNT_404: If book not found.
         """
         result = await get_data_redis_books(id_book)
         if result:
@@ -93,6 +96,8 @@ class BookRepository:
 
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
+            if not book:
+                raise HTTTPError.BOOK_NOT_FOUNT_404
             await set_data_redis_books(book)
             return BookRead(id=book.id, name=book.name, description=book.description)
 

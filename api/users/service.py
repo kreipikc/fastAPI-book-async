@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from .auth import verify_password
 from .database import UsersOrm
+from .responses.http_errors import HTTTPError
 from .schemas import UserCreate
 from ..database import new_session
 
@@ -36,7 +37,7 @@ class UserRepository:
             A int, the ID of the newly created user.
 
         Raises:
-            ValueError: If a user with the same email already exists.
+            HTTTPError.EMAIL_ALREADY_EXISTS_409: If a user with the same email already exists.
         """
         async with new_session() as session:
             try:
@@ -48,7 +49,7 @@ class UserRepository:
                 return user.id
             except IntegrityError:
                 await session.rollback()
-                raise ValueError("User with this email already exists")
+                raise HTTTPError.EMAIL_ALREADY_EXISTS_409
 
     @classmethod
     async def authenticate_user(cls, email: EmailStr, password: str):

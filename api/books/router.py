@@ -1,6 +1,9 @@
 from typing import List
 from fastapi import APIRouter, status
 from fastapi.responses import Response
+
+from .responses.http_errors import HTTTPError
+from .responses.responses import BookResponses
 from .schemas import BookCreate, BookRead
 from .service import BookRepository
 
@@ -14,7 +17,7 @@ router = APIRouter(prefix="/books", tags=["Books 📚"])
     description="Get all books",
     response_description="A list of all books in the database",
     status_code=status.HTTP_200_OK,
-    response_model=List[BookRead]
+    response_model=List[BookRead],
 )
 async def get_all():
     books = await BookRepository.db_get_all()
@@ -27,7 +30,7 @@ async def get_all():
     description="Add new book",
     response_description="The book object with the ID from the database",
     status_code=status.HTTP_201_CREATED,
-    response_model=BookRead
+    response_model=BookRead,
 )
 async def add_book(book: BookCreate):
     book_id = await BookRepository.db_add_one(book)
@@ -40,7 +43,8 @@ async def add_book(book: BookCreate):
     description="Get a book by id",
     response_description="The details of the book with the specified ID",
     status_code=status.HTTP_200_OK,
-    response_model=BookRead
+    response_model=BookRead,
+    responses=BookResponses.get_book,
 )
 async def get_one(id_book: int):
     book = await BookRepository.db_get_one(id_book)
@@ -52,13 +56,14 @@ async def get_one(id_book: int):
     summary="Update a specific book",
     description="Update a specific book",
     response_description="A message indicating whether the update was successful",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses=BookResponses.update_book_put,
 )
 async def update_book(book: BookCreate, id_book: int, response: Response):
     result = await BookRepository.db_update(book, id_book)
     if result:
         return Response(status_code=status.HTTP_200_OK)
-    return Response(status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTTPError.BOOK_NOT_FOUNT_404
 
 
 @router.delete(
@@ -66,10 +71,11 @@ async def update_book(book: BookCreate, id_book: int, response: Response):
     summary="Delete a specific book",
     description="Delete a specific book",
     response_description="No content is returned if the deletion was successful",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=BookResponses.delete_book,
 )
 async def delete_book(id_book: int):
     result = await BookRepository.db_delete(id_book)
     if result:
-        return Response(status_code=status.HTTP_200_OK)
-    return Response(status_code=status.HTTP_404_NOT_FOUND)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return HTTTPError.BOOK_NOT_FOUNT_404
