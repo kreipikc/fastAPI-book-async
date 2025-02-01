@@ -1,5 +1,5 @@
 ## What kind of project is this?
-This is an API with 5 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT.
+This is an API with 17 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT.
 
 ## What technologies have I used?
 - Python
@@ -33,9 +33,15 @@ Requests for auth:
 - **GET** `/auth/me` - information about you.
 
 Requests for admin:
-- **GET** `/auth/all_users` - information about all users;
-- **PUT** `/auth/update_user_role` - update role for user;
-- **DELETE** `/auth/delete_user` - delete user.
+- **GET** `/admin/all_users` - information about all users;
+- **PUT** `/admin/update_user_role` - update role for user;
+- **DELETE** `/admin/delete_user` - delete user.
+
+Requests for roles:
+- **GET** `/roles/all_roles` - information about all roles;
+- **POST** `/roles/add_role` - add new role;
+- **PUT** `/roles/update_role` - update info about a specific role;
+- **DELETE** `/roles/delete_role` - delete info about a specific role.
 
 You can also use `/docs` to check the sending of requests, where all the endpoints will be
 
