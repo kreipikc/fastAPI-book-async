@@ -1,45 +1,9 @@
-from typing import Optional
 from sqlalchemy import select, update
 from sqlalchemy.exc import NoResultFound
 from .database import BookOrm
 from .responses.http_errors import HTTTPError
 from .schemas import BookCreate, BookRead
 from ..database import new_session
-from ..redis import redis_client
-import json
-
-
-async def set_data_redis_books(book: BookOrm):
-    """Sets book data in Redis cache.
-
-    This function converts the book object to a dictionary, serializes it to JSON, and stores it in Redis with an expiration time of 30 seconds.
-
-    Args:
-        book (BookOrm): The book object to be cached.
-    """
-    book_dict = {
-        "id": book.id,
-        "name": book.name,
-        "description": book.description,
-    }
-    json_book = json.dumps(book_dict)
-    await redis_client.set(book.id, json_book, 30)
-
-async def get_data_redis_books(id_book: int) -> Optional[BookRead]:
-    """Retrieves book data from Redis cache.
-
-    This function retrieves the book data from Redis, deserializes it from JSON, and returns it as a BookRead object.
-
-    Args:
-        id_book (int): The ID of the book to retrieve.
-
-    Returns:
-        A Optional[BookRead], the book data as a BookRead object if found in Redis, otherwise None.
-    """
-    book = await redis_client.get(id_book)
-    if book:
-        return BookRead(**json.loads(book))
-    return None
 
 
 class BookRepository:
@@ -79,7 +43,7 @@ class BookRepository:
 
     @classmethod
     async def db_get_one(cls, id_book: int):
-        """Retrieves a single book by ID from Redis or the database.
+        """Retrieves a single book by ID from database.
 
         Args:
             id_book (int): The ID of the book to retrieve.
@@ -90,15 +54,11 @@ class BookRepository:
         Raises:
             HTTTPError.BOOK_NOT_FOUNT_404: If book not found.
         """
-        result = await get_data_redis_books(id_book)
-        if result:
-            return BookRead.model_validate(result)
 
         async with new_session() as session:
             book = await session.get(BookOrm, id_book)
             if not book:
                 raise HTTTPError.BOOK_NOT_FOUNT_404
-            await set_data_redis_books(book)
             return BookRead(id=book.id, name=book.name, description=book.description)
 
     @classmethod

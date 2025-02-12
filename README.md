@@ -1,5 +1,5 @@
 ## What kind of project is this?
-This is an API with 17 endpoints. Realistic AAA (Authentication Authorization and Accounting) server and implemented JWT.
+This is an API with 19 endpoints. Realistic AAA (Authentication Authorization and Accounting) server.
 
 ## What technologies have I used?
 - Python
@@ -10,6 +10,7 @@ This is an API with 17 endpoints. Realistic AAA (Authentication Authorization an
 - JWT
 - PostgreSQL
 - Redis
+- SMTP
 - Docker
 
 ## Why did I even start creating this project?
@@ -30,7 +31,9 @@ Requests for auth:
 - **POST** `/auth/login` - login for user;
 - **POST** `/auth/refresh` - refresh access token;
 - **POST** `/auth/logout` - logout account;
-- **GET** `/auth/me` - information about you.
+- **GET** `/auth/me` - information about you;
+- **POST** `/auth/forgot_password` - request a reset password procedure;
+- **POST** `/auth/reset_password` - reset a password by recovery code in email.
 
 Requests for admin:
 - **GET** `/admin/all_users` - information about all users;
