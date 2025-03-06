@@ -1,13 +1,13 @@
 from typing import Optional
-import aioredis
+import redis.asyncio as redis
 
 
 class RedisDB:
     """
     Class for working with Redis
     """
-    def __init__(self, url: str):
-        self.__redis_connect = aioredis.from_url(url=url)
+    def __init__(self, url: str) -> None:
+        self.__redis_connect = redis.from_url(url=url)
 
     async def add_email_code(self, email: str, code: str) -> None:
         await self.__redis_connect.setex(email, 900, code)

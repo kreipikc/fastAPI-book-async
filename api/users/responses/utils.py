@@ -29,3 +29,15 @@ def convert_to_example(http_exceptions: List[HTTPException]) -> dict:
             }
         }
     }
+
+
+def merge_responses(base: dict, additional: dict) -> dict:
+    result = base.copy()
+    for status_code, new_response in additional.items():
+        if status_code in result:
+            result[status_code]["content"]["application/json"]["examples"].update(
+                new_response["content"]["application/json"]["examples"]
+            )
+        else:
+            result[status_code] = new_response
+    return result

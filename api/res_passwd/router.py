@@ -19,7 +19,7 @@ router = APIRouter(prefix="/auth", tags=["Auth 🙎🏻‍♂️"])
     responses=PasswdResponse.forgot_password_post,
 )
 async def forgot_password(request: Request, forgot: ForgotPassword):
-    user = await UserRepository.find_one_or_none(forgot.email)
+    user = await UserRepository.find_one_or_none(str(forgot.email))
     if user is None:
         raise HTTTPError.BAD_EMAIL_400
 
@@ -47,7 +47,7 @@ async def reset_password(request: Request, reset: ResetPassword):
     if recovery_code != reset.code:
         raise HTTTPError.BAD_RECOVERY_CODE_400
 
-    check = await PasswdRepository.update_password_by_email(email=reset.email, password=reset.password)
+    check = await PasswdRepository.update_password_by_email(email=str(reset.email), password=reset.password)
     if not check:
         raise HTTTPError.BAD_EMAIL_400
 
